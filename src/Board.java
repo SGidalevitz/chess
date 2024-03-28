@@ -2,7 +2,7 @@ import java.util.*;
 import java.util.HashMap;
 
 public class Board {
-    public static final Board defaultBoard = new Board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    public static final Board startingBoard = new Board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
     private Square[][] board;
     private int toMove; // 0 for white, 1 for black
     private String castlingRights;
@@ -49,11 +49,10 @@ public class Board {
         this.fullMoveNumber = fullMove;
     }
     public Square[][] readFen(String boardAsFENNotation) {
-        HashMap<Character, Integer> CharToPieceIDMap = getCharToPieceIDMap();
         String[] ranks = boardAsFENNotation.split("/");
         Square[][] board = new Square[8][8];
         for (int rankIndex = 7; rankIndex >= 0; rankIndex--) {
-            String rank = ranks[rankIndex];
+            String rank = ranks[7 - rankIndex];
             int fileIndex = 0;
             for (int j = 0; j < rank.length(); j++) {
                 char c = rank.charAt(j);
@@ -65,7 +64,7 @@ public class Board {
                         fileIndex++;
                     }
                 }
-                // if it is not a number, so a piece, then we just put it as a piece
+                // if it is not a number, so a piece, then we just put it in
                 else {
                     // Get the piece type from the pre-made map
                     board[rankIndex][fileIndex] = new Square(new Position(rankIndex, fileIndex), getPieceTypeFromChar(c), getPieceColorFromChar(c));
@@ -77,7 +76,11 @@ public class Board {
         return board;
     }
 
-    private PieceColor getPieceColorFromChar(char c) {
+    public Square[][] getBoard() {
+        return this.board;
+    }
+
+    public PieceColor getPieceColorFromChar(char c) {
         return switch (c) {
             case 'K', 'Q', 'R', 'B', 'N', 'P' -> PieceColor.White;
             case 'k', 'q', 'r', 'b', 'n', 'p' -> PieceColor.Black;
@@ -101,30 +104,20 @@ public class Board {
     public static boolean charIsBetween0And8(char c) {
         return charIsBetween(c, 0, 8);
     }
-
-    public HashMap<Character, Integer> getCharToPieceIDMap() {
-        HashMap<Character, Integer> charToPieceIDMap = new HashMap<Character, Integer>();
-        charToPieceIDMap.put('P', 1);
-        charToPieceIDMap.put('N', 2);
-        charToPieceIDMap.put('B', 3);
-        charToPieceIDMap.put('R', 4);
-        charToPieceIDMap.put('Q', 5);
-        charToPieceIDMap.put('K', 6);
-        charToPieceIDMap.put('p', 7);
-        charToPieceIDMap.put('n', 8);
-        charToPieceIDMap.put('b', 9);
-        charToPieceIDMap.put('r', 10);
-        charToPieceIDMap.put('q', 11);
-        charToPieceIDMap.put('k', 12);
-        return charToPieceIDMap;
-    }
     public String toString() {
         StringBuilder builder = new StringBuilder();
         for (int rank = 7; rank >= 0; rank--)  {
             for (int file = 0; file < 8; file++) {
+                if (file == 0) {
+                    builder.append(Position.positionToChessPosition(new Position(rank, file)).charAt(0)).append(" - ");
+                }
                 builder.append(board[rank][file].toString()).append(" ");
             }
             builder.append("\n");
+        }
+        builder.append("    ");
+        for (int i = 1; i <= 8; i++) {
+            builder.append(i).append(" ");
         }
         return builder.toString();
     }

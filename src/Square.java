@@ -17,6 +17,19 @@ public class Square {
         this.pieceType = PieceType.Empty;
         this.pieceColor = Optional.empty();
     }
+
+    public Position getPosition() {
+        return this.position;
+    }
+
+    public PieceType getPieceType() {
+        return this.pieceType;
+    }
+
+    public Optional<PieceColor> getPieceColor() {
+        return this.pieceColor;
+    }
+
     public String toString() {
         if (this.pieceColor.isEmpty()) return ".";
         if (this.pieceColor.get() == PieceColor.White) {
