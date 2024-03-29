@@ -20,8 +20,8 @@ public class Position {
     Notes: Position is checked for proper bounds in the constructor, so the checking of bounds for this method is unnecessary.
      */
     public static String positionToChessPosition(Position position) {
-        char rank = (char)('a' + position.row);
-        char file = (char)('1' + position.col);
+        char rank = (char)('a' + position.col);
+        char file = (char)('1' + position.row);
         return "" + rank + file;
     }
 
@@ -35,8 +35,8 @@ public class Position {
     public static Position chessPositionToPosition(String chessPosition) {
         boolean isProperLength = chessPosition.length() == 2;
         if (!isProperLength) throw new IllegalArgumentException("Invalid argument: chessPosition must be a string of length 2.");
-        int properRow = chessPosition.charAt(0) - 'a';
-        int properCol = chessPosition.charAt(1) - '1';
+        int properCol = chessPosition.charAt(0) - 'a';
+        int properRow = chessPosition.charAt(1) - '1';
         String exceptionMsg = getExceptionMessageIfExists(properRow, properCol);
         if (exceptionMsg != null) throw new IllegalArgumentException(exceptionMsg);
         return new Position(properRow, properCol);

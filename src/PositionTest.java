@@ -15,14 +15,14 @@ public class PositionTest {
         // Test that positionToChessPosition works for proper method calls
         assertEquals("a1", Position.positionToChessPosition(new Position(0, 0)));
         assertEquals("h8", Position.positionToChessPosition(new Position(7, 7)));
-        assertEquals("b7", Position.positionToChessPosition(new Position(1, 6)));
+        assertEquals("g2", Position.positionToChessPosition(new Position(1, 6)));
     }
     @Test
     public void testChessPositionToPosition() {
         // Test that chessPositionToPosition works for proper method calls
-        assertEquals(new Position(0, 4), Position.chessPositionToPosition("a5"));
-        assertEquals(new Position(2, 6), Position.chessPositionToPosition("c7"));
-        assertEquals(new Position(6, 0), Position.chessPositionToPosition("g1"));
+        assertEquals(new Position(4, 0), Position.chessPositionToPosition("a5"));
+        assertEquals(new Position(6, 2), Position.chessPositionToPosition("c7"));
+        assertEquals(new Position(0, 6), Position.chessPositionToPosition("g1"));
         // Test that chessPositionToPosition method throws IllegalArgumentException for improper length
         assertThrows(IllegalArgumentException.class, () -> { Position.chessPositionToPosition("invalid"); });
         // Test that chessPositionToPosition method throws IllegalArgumentException for out-of-bounds row and column
