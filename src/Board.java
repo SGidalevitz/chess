@@ -1,8 +1,8 @@
 import java.util.*;
-import java.util.HashMap;
 
 public class Board {
-    public static final Board startingBoard = new Board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    public static final Board STARTING_BOARD = new Board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    public static final int BOARD_DIMENSION = 8;
     private Square[][] board;
     private int toMove; // 0 for white, 1 for black
     private String castlingRights;
@@ -11,13 +11,15 @@ public class Board {
     private int fullMoveNumber;
     // Construct a board with a given FEN code, which is the standard for a chess position
     /*
-    IMPLEMENT -> Method Tested in PositionTest.java
+    Method Tested in PositionTest.java
     Description: This method takes in a String, the Forsyth–Edwards Notation (or FEN for short) of a position, and creates a board that contains all of the information given by this notation.
     Parameters: chessPosition(String) -> the position to check
     Examples: refer to test method.
      */
     public Board(String FEN) {
         String[] partsOfFEN = FEN.split(" ");
+        String exceptionMsg = getExceptionMessageForFENValidityIfExists(FEN);
+        if (exceptionMsg != null) throw new IllegalArgumentException(exceptionMsg);
         this.board = readFen(partsOfFEN[0]);
         if (partsOfFEN[1].equals("w")) {
             this.toMove = 0;
@@ -25,7 +27,7 @@ public class Board {
         else {
             this.toMove = 1;
         }
-        this.castlingRights = partsOfFEN[2];
+        this.castlingRights = (partsOfFEN[2].equals("-")) ? "" : partsOfFEN[2];
         if (partsOfFEN[3].equals("-")) {
             this.enPassantTargetSquare = Optional.empty();
         }
@@ -36,8 +38,91 @@ public class Board {
         this.fullMoveNumber = Integer.parseInt(partsOfFEN[5]);
     }
     public String getExceptionMessageForFENValidityIfExists(String FEN) {
+        String[] partsOfFEN = FEN.split(" ");
+        if (partsOfFEN.length != 6) return "FEN code has too many arguments, expected 6 but given " + partsOfFEN.length + ".";
+        // Check part 1 - position
+        String[] board = partsOfFEN[0].split("/");
+        if (board.length != BOARD_DIMENSION) {
+            return "Argument 1, which is the board position, has an incorrect number of ranks supplied, expected " + BOARD_DIMENSION + ", but given " + board.length + ".";
+        }
+        for (int rank = 0; rank < BOARD_DIMENSION; rank++) {
+            int count = 0;
+            for (int file = 0; file < board[rank].length(); file++) {
+                char c = board[rank].charAt(file);
+                if (charIsBetween(c, 0, 9)) {
+                    count += (c - '0');
+                }
+                else {
+                    count += 1;
+                }
+            }
+            if (count != 8) {
+                return "Argument 1, which is the board position, has too many (" + count + ") files on rank " + ((char)((7 - rank) + 'a')) + ", should be " + BOARD_DIMENSION + ".";
+            }
+        }
+        // Check part 2 - whose move it is
+        String toMove = partsOfFEN[1];
+        if (toMove.length() != 1) {
+            return "Argument 2, which is supposed to be the player to move, is \"" + toMove + "\", which is more than one character long.";
+        }
+        char toMoveAsChar = toMove.charAt(0);
+        if (toMoveAsChar != 'b' && toMoveAsChar != 'w') {
+            return "Argument 2, which is supposed to be the player to move, is \"" + toMove + "\", which is not \"b\" or \"w\".";
+        }
+        // Check part 3 - castling rights
+        String castlingRights = (partsOfFEN[2].equals("-")) ? "" : partsOfFEN[2];
+        if (castlingRights.isEmpty() || castlingRights.length() > 4) {
+            return "Argument 3, which is supposed to be castling rights, is \"" + castlingRights + "\", which is not between 1 and 4 characters long."; // KQkq
+        }
+        int crCount = 0;
+        char[] crArr = castlingRights.toCharArray();
+        char[] arr = "KQkq".toCharArray();
+        for (int i = 0; i < 4; i++) {
+            if (arr[i] == crArr[crCount]) {
+                crCount++;
+            }
+        }
+        if (crCount != crArr.length) {
+            return "Argument 3, which is supposed to be castling rights, is \"" + castlingRights + "\", which is not in the proper format.";
+        }
+        // Check part 4 - en passant target square
+        String enPassantTargetSquare = partsOfFEN[3];
+
+        if (!enPassantTargetSquare.equals("-")) {
+            if (enPassantTargetSquare.length() != 2) throw new IllegalArgumentException("Argument 4, which is supposed to be en passant target square, must be a string of length 2.");
+            int properRow = enPassantTargetSquare.charAt(0) - 'a';
+            int properCol = enPassantTargetSquare.charAt(1) - '1';
+            String exceptionMsg = Position.getExceptionMessageIfExists(properRow, properCol);
+            if (exceptionMsg != null) {
+                return "Argument 4, which is supposed to be en passant target square, has invalid bounds. " + exceptionMsg;
+            }
+        }
+        // Check part 5 - half move clock
+        if (!correctNumberFormat(partsOfFEN[4])) {
+            return "Argument 5, which is supposed to be half move clock, is \"" + partsOfFEN[4] + "\", which is not an integer.";
+        }
+        int halfMoveClock = Integer.parseInt(partsOfFEN[4]);
+        if (halfMoveClock < 0 || halfMoveClock >= 50) {
+            return "Half move clock is \"" + halfMoveClock + "\", which is not between 0 and 49.";
+        }
+        // Check part 6 - full move number
+        if (!correctNumberFormat(partsOfFEN[5])) {
+            return "Argument 6, which is supposed to be full move number, is \"" + partsOfFEN[5] + "\", which is not an integer.";
+        }
+        int fullMoveNumber = Integer.parseInt(partsOfFEN[5]);
+        if (fullMoveNumber < 1) {
+            return "Full move number is \"" + fullMoveNumber + "\", which is not greater than or equal to 1.";
+        }
         return null;
-        // Implement later
+    }
+    public boolean correctNumberFormat(String num) {
+        try {
+            Integer.parseInt(num);
+        }
+        catch (NumberFormatException e) {
+            return false;
+        }
+        return true;
     }
     //If we already have the board info, such as if we have to simulate moves, then we can construct the class with given information usually extracted from FEN
     public Board(Square[][] board, int toMove, String castlingRights, Position enPassantTargetSquare, int halfMoveClock, int fullMove) {
@@ -51,8 +136,8 @@ public class Board {
     public Square[][] readFen(String boardAsFENNotation) {
         String[] ranks = boardAsFENNotation.split("/");
         Square[][] board = new Square[8][8];
-        for (int rankIndex = 7; rankIndex >= 0; rankIndex--) {
-            String rank = ranks[7 - rankIndex];
+        for (int rankIndex = BOARD_DIMENSION - 1; rankIndex >= 0; rankIndex--) {
+            String rank = ranks[BOARD_DIMENSION - 1 - rankIndex];
             int fileIndex = 0;
             for (int j = 0; j < rank.length(); j++) {
                 char c = rank.charAt(j);
@@ -106,8 +191,8 @@ public class Board {
     }
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        for (int rank = 7; rank >= 0; rank--)  {
-            for (int file = 0; file < 8; file++) {
+        for (int rank = BOARD_DIMENSION - 1; rank >= 0; rank--)  {
+            for (int file = 0; file < BOARD_DIMENSION; file++) {
                 if (file == 0) {
                     builder.append(Position.positionToChessPosition(new Position(rank, file)).charAt(0)).append(" - ");
                 }
@@ -116,7 +201,7 @@ public class Board {
             builder.append("\n");
         }
         builder.append("    ");
-        for (int i = 1; i <= 8; i++) {
+        for (int i = 1; i <= BOARD_DIMENSION; i++) {
             builder.append(i).append(" ");
         }
         return builder.toString();

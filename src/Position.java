@@ -42,7 +42,7 @@ public class Position {
         return new Position(properRow, properCol);
     }
 
-    private static String getExceptionMessageIfExists(int row, int col) {
+    public static String getExceptionMessageIfExists(int row, int col) {
         // Both properRow and properCol should be in the range [0,8).
         boolean rowOutOfBounds = row < 0 || row >= 8;
         boolean colOutOfBounds = col < 0 || col >= 8;
