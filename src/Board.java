@@ -23,10 +23,6 @@ public class Board {
         if (exceptionMsg != null) throw new IllegalArgumentException(exceptionMsg);
         this.board = readFEN(partsOfFEN[0]);
         if (partsOfFEN[1].equals("w")) {
-            this.toMove = 0;
-        }
-        else {
-            this.toMove = 1;
             this.toMove = PieceColor.White;
         } else {
             this.toMove = PieceColor.Black;
@@ -107,19 +103,21 @@ public class Board {
         }
         // Check part 3 - castling rights
         String castlingRights = (partsOfFEN[2].equals("-")) ? "" : partsOfFEN[2];
-        if (castlingRights.isEmpty() || castlingRights.length() > 4) {
+        if (castlingRights.length() > 4) {
             return "Argument 3, which is supposed to be castling rights, is \"" + castlingRights + "\", which is not between 1 and 4 characters long."; // KQkq
         }
-        int crCount = 0;
-        char[] crArr = castlingRights.toCharArray();
-        char[] arr = "KQkq".toCharArray();
-        for (int i = 0; i < 4; i++) {
-            if (arr[i] == crArr[crCount]) {
-                crCount++;
+        if (!castlingRights.isEmpty()) {
+            int crCount = 0;
+            char[] crArr = castlingRights.toCharArray();
+            char[] arr = "KQkq".toCharArray();
+            for (int i = 0; i < 4; i++) {
+                if (arr[i] == crArr[crCount]) {
+                    crCount++;
+                }
             }
-        }
-        if (crCount != crArr.length) {
-            return "Argument 3, which is supposed to be castling rights, is \"" + castlingRights + "\", which is not in the proper format.";
+            if (crCount != crArr.length) {
+                return "Argument 3, which is supposed to be castling rights, is \"" + castlingRights + "\", which is not in the proper format.";
+            }
         }
         // Check part 4 - en passant target square
         String enPassantTargetSquare = partsOfFEN[3];
@@ -289,15 +287,15 @@ public class Board {
         for (int rank = BOARD_DIMENSION - 1; rank >= 0; rank--) {
             for (int file = 0; file < BOARD_DIMENSION; file++) {
                 if (file == 0) {
-                    builder.append(Position.positionToChessPosition(new Position(rank, file)).charAt(0)).append(" - ");
+                    builder.append(rank + 1).append(" - ");
                 }
                 builder.append(board[rank][file].toString()).append(" ");
             }
             builder.append("\n");
         }
         builder.append("    ");
-        for (int i = 1; i <= BOARD_DIMENSION; i++) {
-            builder.append(i).append(" ");
+        for (int i = 0; i < BOARD_DIMENSION; i++) {
+            builder.append((char)('a' + i)).append(" ");
         }
         return builder.toString();
     }

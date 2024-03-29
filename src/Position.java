@@ -44,8 +44,8 @@ public class Position {
 
     public static String getExceptionMessageIfExists(int row, int col) {
         // Both properRow and properCol should be in the range [0,8).
-        boolean rowOutOfBounds = row < 0 || row >= 8;
-        boolean colOutOfBounds = col < 0 || col >= 8;
+        boolean rowOutOfBounds = row < 0 || row >= Board.BOARD_DIMENSION;
+        boolean colOutOfBounds = col < 0 || col >= Board.BOARD_DIMENSION;
         String exceptionMsg = null;
         if (rowOutOfBounds && colOutOfBounds) {
             exceptionMsg = "Both row and column are out of bounds.";
@@ -55,6 +55,9 @@ public class Position {
             exceptionMsg = "Column is out of bounds.";
         }
         return exceptionMsg;
+    }
+    public static boolean isInBounds(Position pos) {
+        return 0 <= pos.row && pos.row < Board.BOARD_DIMENSION && 0 <= pos.col && pos.col < Board.BOARD_DIMENSION;
     }
     @Override
     public boolean equals(Object obj) {
