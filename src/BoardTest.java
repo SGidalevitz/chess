@@ -1,4 +1,7 @@
 import org.junit.Test;
+
+import java.util.Optional;
+
 import static org.junit.Assert.*;
 
 public class BoardTest {
@@ -66,5 +69,39 @@ public class BoardTest {
         for (String FEN : FENsToTest) {
             assertThrows(IllegalArgumentException.class, () -> { Board testBoard = new Board(FEN); });
         }
+    }
+    @Test
+    public void testFENGeneration() {
+        // Test position 1
+        Board board = new Board("8/3k3p/1p6/1Np5/2P3P1/4p3/3bK3/8 w - - 0 54");
+        board.getSquareAtPosition(Position.chessPositionToPosition("g4")).pieceType = PieceType.Empty;
+        board.getSquareAtPosition(Position.chessPositionToPosition("g4")).pieceColor = Optional.empty();
+        board.getSquareAtPosition(Position.chessPositionToPosition("g5")).pieceType = PieceType.Pawn;
+        board.getSquareAtPosition(Position.chessPositionToPosition("g5")).pieceColor = Optional.of(PieceColor.White);
+        board.switchToMove();
+        assertEquals("8/3k3p/1p6/1Np3P1/2P5/4p3/3bK3/8 b - - 0 54", board.getFEN());
+
+        //Test position 2
+        board = new Board("r1b1qrkb/pp1n1p1p/4p1pP/2pnP1B1/3p2N1/3P1NP1/PPP2PB1/R2QR1K1 b - - 6 16");
+        board.getSquareAtPosition(Position.chessPositionToPosition("d7")).pieceType = PieceType.Empty;
+        board.getSquareAtPosition(Position.chessPositionToPosition("d7")).pieceColor = Optional.empty();
+        board.getSquareAtPosition(Position.chessPositionToPosition("b6")).pieceType = PieceType.Knight;
+        board.getSquareAtPosition(Position.chessPositionToPosition("b6")).pieceColor = Optional.of(PieceColor.Black);
+        board.switchToMove();
+        board.incrementFullMoveNumber();
+        board.incrementHalfMoveClock();
+        assertEquals("r1b1qrkb/pp3p1p/1n2p1pP/2pnP1B1/3p2N1/3P1NP1/PPP2PB1/R2QR1K1 w - - 7 17", board.getFEN());
+
+        //Test position 3
+        board = new Board("3N1R2/P7/5k2/5bp1/r7/r4BK1/6P1/8 b - - 10 53");
+        board.getSquareAtPosition(Position.chessPositionToPosition("f6")).pieceType = PieceType.Empty;
+        board.getSquareAtPosition(Position.chessPositionToPosition("f6")).pieceColor = Optional.empty();
+        board.getSquareAtPosition(Position.chessPositionToPosition("e5")).pieceType = PieceType.King;
+        board.getSquareAtPosition(Position.chessPositionToPosition("e5")).pieceColor = Optional.of(PieceColor.Black);
+        board.switchToMove();
+        board.incrementHalfMoveClock();
+        board.incrementFullMoveNumber();
+        assertEquals("3N1R2/P7/8/4kbp1/r7/r4BK1/6P1/8 w - - 11 54", board.getFEN());
+
     }
 }
