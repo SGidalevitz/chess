@@ -326,4 +326,149 @@ public class Board {
         }
         return builder.toString();
     }
+    public String boardWithPossibleMovesFor(Position pos) {
+        ArrayList<Position> possibleMoves = findMoves(pos);
+        StringBuilder builder = new StringBuilder();
+        for (int rank = BOARD_DIMENSION - 1; rank >= 0; rank--) {
+            for (int file = 0; file < BOARD_DIMENSION; file++) {
+                if (file == 0) {
+                    builder.append(rank + 1).append(" - ");
+                }
+                Position current = new Position(rank, file);
+                if (possibleMoves.contains(current)) {
+                    builder.append("\u001B[31m").append(board[rank][file].toString()).append("\u001B[0m ");
+                }
+                else {
+                    builder.append(board[rank][file].toString()).append(" ");
+                }
+
+            }
+            builder.append("\n");
+        }
+        return getLastPartOfToString(builder);
+    }
+
+    private String getLastPartOfToString(StringBuilder builder) {
+        builder.append("    ");
+        builder.append("| ".repeat(BOARD_DIMENSION));
+        builder.append("\n    ");
+        for (int i = 0; i < BOARD_DIMENSION; i++) {
+            builder.append((char)('a' + i)).append(" ");
+        }
+        return builder.toString();
+    }
+
+    private ArrayList<Position> getMovesForKingKnightAndPawn(Position pos) {
+        Square initialPos = this.board[pos.row][pos.col];
+        PieceType pieceType = initialPos.getPieceType();
+        int[][] vectors = getPieceVectors(pieceType, pos);
+        PieceColor thisPieceColor = initialPos.getPieceColor().orElseThrow();
+        PieceColor oppositePieceColor = (thisPieceColor == PieceColor.White) ? PieceColor.Black : PieceColor.White;
+        ArrayList<Position> possibleMoves = new ArrayList<>();
+        for (int[] vec : vectors) {
+            try {
+                possibleMoves.add(new Position(pos.row + vec[0], pos.col + vec[1]));
+            }
+            catch (IllegalArgumentException ignored) { }
+        }
+        for (int i = possibleMoves.size() - 1; i >= 0; i--) {
+            Position move = possibleMoves.get(i);
+            Square targetSquare = board[move.row][move.col];
+            // Removes the move if it is either: out of bounds, or if the target square is occupied by a piece of its own kind.
+            if (!Position.isInBounds(move) || (targetSquare.getPieceColor().orElse(oppositePieceColor) == thisPieceColor)) {
+                possibleMoves.remove(i);
+            }
+        }
+        return possibleMoves;
+    }
+
+    private ArrayList<Position> getMovesForQueenRookAndBishop(Position pos) {
+        ArrayList<Position> possibleMoves = new ArrayList<>();
+        Square initialPos = this.board[pos.row][pos.col];
+        PieceType pieceType = initialPos.getPieceType();
+        int[][] vectors = getPieceVectors(pieceType, pos);
+        for (int[] vec : vectors) {
+            int row = pos.row;
+            int col = pos.col;
+            boolean squareIsValid = true;
+            while (squareIsValid) {
+                row += vec[0];
+                col += vec[1];
+                Position targetPosition;
+                try {
+                    targetPosition = new Position(row, col);
+                }
+                catch (IllegalArgumentException e) {
+                    break;
+                }
+                Square targetSquare = board[row][col];
+                PieceColor thisPieceColor = initialPos.getPieceColor().orElseThrow();
+                PieceColor oppositePieceColor = (thisPieceColor == PieceColor.White) ? PieceColor.Black : PieceColor.White;
+                // If the target square is empty, it is a valid place to move
+                if (targetSquare.getPieceColor().isEmpty()) {
+                    possibleMoves.add(targetPosition);
+                }
+                // If the target square is the opposite side's piece, then it is valid but search needs to be stopped after it.
+                else if (targetSquare.getPieceColor().get() == oppositePieceColor) {
+                    possibleMoves.add(targetPosition);
+                    squareIsValid = false;
+                }
+                // If the target square is the current side's piece, then it is invalid and search needs to be stopped.
+                else {
+                    squareIsValid = false;
+                }
+            }
+        }
+        return possibleMoves;
+    }
+    public ArrayList<Position> findMoves(Position pos) {
+        return switch (getSquareAtPosition(pos).getPieceType()) {
+            case King, Knight, Pawn -> getMovesForKingKnightAndPawn(pos);
+            case Queen, Rook, Bishop -> getMovesForQueenRookAndBishop(pos);
+            case Empty -> throw new IllegalArgumentException("Empty position given to findMoves method, which requires an existent piece.");
+        };
+    }
+    public ArrayList<Position> findMoves(String chessPosition) {
+        return findMoves(Position.chessPositionToPosition(chessPosition));
+    }
+
+    public String boardWithPossibleMovesFor(String chessPosition) {
+        return boardWithPossibleMovesFor(Position.chessPositionToPosition(chessPosition));
+    }
+
+    private int[][] getPieceVectors(PieceType pieceType, Position pos) {
+        return switch (pieceType) {
+            case King   ->  new int[][]{{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};      // All positions exactly 1 square away
+            case Queen  ->  new int[][]{{-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {-1, 1}, {1, -1}, {1, 1}};     // ITERATION Combination of both Rook and Bishop moves
+            case Rook   ->  new int[][]{{-1, 0}, {1, 0}, {0, -1}, {-1, 0}};                                         // ITERATION all positions in each four cardinal directions
+            case Bishop ->  new int[][]{{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};                                        // ITERATION all positions in each four diagonal directions
+            case Knight ->  new int[][]{{-1, -2}, {-2, -1}, {1, -2}, {2, -1}, {-1, 2}, {-2, 1}, {1, 2}, {2, 1}};    // All positions in the L-shape that the knight moves in
+            case Pawn   ->  getPawnVectors(pos);
+            case Empty -> throw new IllegalStateException("Empty piece got through errors into getPieceVectors() function, should have been stopped earlier");
+        };
+    }
+
+    public int[][] getPawnVectors(Position pos) {
+        Square initialPos = this.board[pos.row][pos.col];
+        PieceColor thisPieceColor = initialPos.getPieceColor().orElseThrow();
+        int[][] vectors;
+        int[][][] possibleCases =
+               { {{1, 0},  {2, 0}},
+                {{-1, 0}, {-2, 0}},
+                { {1, 0}},
+                {{-1, 0}}         };
+        if (thisPieceColor == PieceColor.White && pos.row == 1) {
+            return possibleCases[0];
+        }
+        else if (thisPieceColor == PieceColor.Black && pos.row == 6) {
+            return possibleCases[1];
+        }
+        else if (thisPieceColor == PieceColor.White) {
+            return possibleCases[2];
+        }
+        else {
+            return possibleCases[3];
+        }
+    }
+
 }
