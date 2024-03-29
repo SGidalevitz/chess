@@ -17,6 +17,11 @@ public class Square {
         this.pieceType = PieceType.Empty;
         this.pieceColor = Optional.empty();
     }
+    public Square(Square other) {
+        this.position = new Position(other.position);
+        this.pieceType = other.pieceType;
+        this.pieceColor = other.pieceColor;
+    }
 
     public Position getPosition() {
         return this.position;
