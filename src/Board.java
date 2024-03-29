@@ -219,6 +219,21 @@ public class Board {
         this.halfMoveClock = halfMoveClock;
         this.fullMoveNumber = fullMove;
     }
+
+    public Board(Board other) {
+        this.board = new Square[BOARD_DIMENSION][BOARD_DIMENSION];
+        for (int i = 0; i < BOARD_DIMENSION; i++) {
+            for (int j = 0; j < BOARD_DIMENSION; j++) {
+                this.board[i][j] = new Square(other.board[i][j]);
+            }
+        }
+        this.toMove = other.toMove;
+        this.castlingRights = other.castlingRights;
+        this.enPassantTargetSquare = other.enPassantTargetSquare;
+        this.halfMoveClock = other.halfMoveClock;
+        this.fullMoveNumber = other.fullMoveNumber;
+    }
+
     public void switchToMove() {
         toMove = switch(toMove) {
             case Black -> PieceColor.White;
@@ -358,7 +373,54 @@ public class Board {
         }
         return builder.toString();
     }
+    // TODO: Track the king's coordinates separately as this operation doesn't need to run each time
+    public Position locateKing(PieceColor pieceColor) {
+        for (Square[] rank : board) {
+            for (Square square : rank) {
+                if (square.getPieceType() == PieceType.King && square.getPieceColor().orElseThrow() == pieceColor) {
+                    return square.getPosition();
+                }
+            }
+        }
+        throw new IllegalStateException("No king found on board.");
+    }
+    public boolean resultsInCheck(Position piecePosition, Position targetPosition, PieceColor sideColor) {
+        Board testBoard = new Board(this);
+        testBoard.makeMove(piecePosition, targetPosition);
+        Position kingLocation = testBoard.locateKing(sideColor);
+        HashSet<Position> a = testBoard.getMovesOfAllPieces(PieceColor.getOpposite(sideColor));
+        HashSet<Position> movesOfAllPieces = testBoard.getMovesOfAllPieces(PieceColor.getOpposite(sideColor));
+        //if (!movesOfAllPieces.equals(a)) System.out.println("other moves: " + movesOfAllPieces);
+        return contains(movesOfAllPieces,kingLocation);
+    }
+    public boolean resultsInCheck(String piecePosition, String targetPosition, PieceColor sideColor) {
+        return resultsInCheck(Position.chessPositionToPosition(piecePosition), Position.chessPositionToPosition(targetPosition), sideColor);
+    }
+    public void makeMove(Position piecePosition, Position targetPosition) {
+        this.getSquareAtPosition(targetPosition).pieceType = this.getSquareAtPosition(piecePosition).pieceType;
+        this.getSquareAtPosition(targetPosition).pieceColor = this.getSquareAtPosition(piecePosition).pieceColor;
+        this.getSquareAtPosition(piecePosition).pieceType = PieceType.Empty;
+        this.getSquareAtPosition(piecePosition).pieceColor = Optional.empty();
+    }
 
+    public ArrayList<Position> getPositionsOfAllPieces(PieceColor sideColor) {
+        ArrayList<Position> positionsOfAllPieces = new ArrayList<>();
+        for (Square[] rank : board) {
+            for (Square square : rank) {
+                if (square.getPieceColor().isPresent() && square.getPieceColor().get() == sideColor) {
+                    positionsOfAllPieces.add(square.getPosition());
+                }
+            }
+        }
+        return positionsOfAllPieces;
+    }
+    public HashSet<Position> getMovesOfAllPieces(PieceColor sideColor) {
+        HashSet<Position> allPossibleMoves = new HashSet<>();
+        for (Position position : getPositionsOfAllPieces(sideColor)) {
+            allPossibleMoves.addAll(findMoves(position));
+        }
+        return allPossibleMoves;
+    }
     private ArrayList<Position> getMovesForKingKnightAndPawn(Position pos) {
         Square initialPos = this.board[pos.row][pos.col];
         PieceType pieceType = initialPos.getPieceType();
@@ -382,6 +444,7 @@ public class Board {
         }
         return possibleMoves;
     }
+
 
     private ArrayList<Position> getMovesForQueenRookAndBishop(Position pos) {
         ArrayList<Position> possibleMoves = new ArrayList<>();
@@ -445,7 +508,7 @@ public class Board {
             case Bishop ->  new int[][]{{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};                                        // ITERATION all positions in each four diagonal directions
             case Knight ->  new int[][]{{-1, -2}, {-2, -1}, {1, -2}, {2, -1}, {-1, 2}, {-2, 1}, {1, 2}, {2, 1}};    // All positions in the L-shape that the knight moves in
             case Pawn   ->  getPawnVectors(pos);
-            case Empty -> throw new IllegalStateException("Empty piece got through errors into getPieceVectors() function, should have been stopped earlier");
+            case Empty  -> throw new IllegalStateException("Empty piece got through errors into getPieceVectors() function, should have been stopped earlier");
         };
     }
 
@@ -470,6 +533,14 @@ public class Board {
         else {
             return possibleCases[3];
         }
+    }
+    public static boolean contains(HashSet<Position> list, Position value) {
+        for (Position pos : list) {
+            if (pos.equals(value)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

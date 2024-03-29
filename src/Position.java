@@ -7,6 +7,15 @@ public class Position {
         this.row = row;
         this.col = col;
     }
+    public Position(Position other) {
+        this.row = other.row;
+        this.col = other.col;
+    }
+    public Position(String chessNotation) {
+        Position other = chessPositionToPosition(chessNotation);
+        this.row = other.row;
+        this.col = other.col;
+    }
     public String toString() {
         return "(" + row + ", " + col + ")";
     }
