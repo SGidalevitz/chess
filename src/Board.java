@@ -113,6 +113,7 @@ public class Board {
             for (int i = 0; i < 4; i++) {
                 if (arr[i] == crArr[crCount]) {
                     crCount++;
+                    if (crCount == crArr.length) break;
                 }
             }
             if (crCount != crArr.length) {
