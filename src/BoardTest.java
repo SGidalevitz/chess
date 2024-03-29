@@ -104,4 +104,21 @@ public class BoardTest {
         assertEquals("3N1R2/P7/8/4kbp1/r7/r4BK1/6P1/8 w - - 11 54", board.getFEN());
 
     }
+
+    @Test
+    public void testResultsInCheck() {
+        Board board = new Board("rnb1k1nr/pppp1p2/4pqpp/8/1b2P1Q1/1P6/P1PPKPPP/RNB2BNR w kq - 3 6");
+        assertTrue(board.resultsInCheck("e2", "f3", PieceColor.White));
+        board = new Board("r1b1k1nr/1ppp1p2/p1n1p1pp/3N1q2/1bB1P1Q1/1P3N2/P1PP1PPP/R1B1K2R w KQkq - 0 9");
+        assertTrue(board.resultsInCheck("d2", "d3", PieceColor.White));
+        board = new Board("r1b3nr/1ppp1p2/p1n1pkpp/5q2/1NB1P1QP/1P3N2/P1PP1PP1/R1B1K2R b KQ - 0 11");
+        assertTrue(board.resultsInCheck("f6", "g5", PieceColor.Black));
+        assertTrue(board.resultsInCheck("f6", "e5", PieceColor.Black));
+        assertFalse(board.resultsInCheck("f5", "f3", PieceColor.Black));
+        board = new Board("r1b3nr/1ppp1p2/2n1pkp1/p5pP/1NBNP3/1P4q1/P1PP1PP1/R1B1K2R w KQ - 0 15");
+        assertTrue(board.resultsInCheck("f2", "f3", PieceColor.White));
+        assertTrue(board.resultsInCheck("f2", "f4", PieceColor.White));
+        assertFalse(board.resultsInCheck("c3", "c3", PieceColor.White));
+    }
+
 }
