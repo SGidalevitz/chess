@@ -13,7 +13,7 @@ public class Board {
     // Construct a board with a given FEN code, which is the standard for a chess position
     /*
     Method Tested in PositionTest.java
-    Description: This method takes in a String, the Forsyth–Edwards Notation (or FEN for short) of a position, and creates a board that contains all of the information given by this notation.
+    Description: This method takes in a String, the Forsyth–Edwards Notation (or FEN for short) of a position, and creates a board that contains all the information given by this notation.
     Parameters: chessPosition(String) -> the position to check
     Examples: refer to test method.
      */
@@ -218,6 +218,22 @@ public class Board {
         this.halfMoveClock = halfMoveClock;
         this.fullMoveNumber = fullMove;
     }
+    public void switchToMove() {
+        toMove = switch(toMove) {
+            case Black -> PieceColor.White;
+            case White -> PieceColor.Black;
+        };
+    }
+    public void incrementFullMoveNumber() {
+        fullMoveNumber++;
+    }
+    public void incrementHalfMoveClock() {
+        halfMoveClock++;
+    }
+    public Square getSquareAtPosition(Position pos) {
+        return this.board[pos.row][pos.col];
+    }
+
 
 
 
@@ -271,6 +287,17 @@ public class Board {
                 case Black -> 'p';
             };
             case Empty -> throw new IllegalStateException("Empty piece got through handling in loop in getFEN().");
+        };
+    }
+    public String pieceTypeToString(PieceType pieceType) {
+        return switch (pieceType) {
+            case King -> "King";
+            case Queen -> "Queen";
+            case Rook -> "Rook";
+            case Bishop -> "Bishop";
+            case Knight -> "Knight";
+            case Pawn -> "Pawn";
+            case Empty -> "Empty";
         };
     }
 
