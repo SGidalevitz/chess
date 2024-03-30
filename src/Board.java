@@ -504,7 +504,7 @@ public class Board {
         return switch (pieceType) {
             case King   ->  new int[][]{{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};      // All positions exactly 1 square away
             case Queen  ->  new int[][]{{-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {-1, 1}, {1, -1}, {1, 1}};     // ITERATION Combination of both Rook and Bishop moves
-            case Rook   ->  new int[][]{{-1, 0}, {1, 0}, {0, -1}, {-1, 0}};                                         // ITERATION all positions in each four cardinal directions
+            case Rook   ->  new int[][]{{-1, 0}, {1, 0}, {0, -1}, {0, 1}};                                         // ITERATION all positions in each four cardinal directions
             case Bishop ->  new int[][]{{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};                                        // ITERATION all positions in each four diagonal directions
             case Knight ->  new int[][]{{-1, -2}, {-2, -1}, {1, -2}, {2, -1}, {-1, 2}, {-2, 1}, {1, 2}, {2, 1}};    // All positions in the L-shape that the knight moves in
             case Pawn   ->  getPawnVectors(pos);
