@@ -94,64 +94,64 @@ public class BoardTest {
 
         Board board = Board.STARTING_BOARD;
         // Test Pawns
-        ArrayList<Position> sampleMoves0 = new ArrayList<>();
+        ArrayList<Move> sampleMoves0 = new ArrayList<>();
         String[] strings0 = {"e3", "e4"};
         for (String str : strings0) {
-            sampleMoves0.add(new Position(str));
+            sampleMoves0.add(new Move(new Position("e2"), new Position(str)));
         }
         assertEquals(sampleMoves0, board.findMoves("e2"));
 
-        ArrayList<Position> sampleMoves1 = new ArrayList<>();
+        ArrayList<Move> sampleMoves1 = new ArrayList<>();
         String[] strings1 = {"e6", "e5"};
         for (String str : strings1) {
-            sampleMoves1.add(new Position(str));
+            sampleMoves1.add(new Move(new Position("e7"), new Position(str)));
         }
         assertEquals(sampleMoves1, board.findMoves("e7"));
         // Test Knights
         board = new Board("rnbqkb1r/pppppppp/8/4N2n/8/8/PPPPPPPP/RNBQKB1R w KQkq - 4 3");
-        ArrayList<Position> sampleMoves2 = new ArrayList<>();
+        ArrayList<Move> sampleMoves2 = new ArrayList<>();
         String[] strings2 = {"d3", "f3", "c4", "g4", "c6", "g6", "d7", "f7"};
         for (String str : strings2) {
-            sampleMoves2.add(new Position(str));
+            sampleMoves2.add(new Move(new Position("e5"), new Position(str)));
         }
         assertTrue(equalsIgnoringOrder(sampleMoves2, board.findMoves("e5")));
 
         // Test Bishops
 
         board = new Board("rnbqkbnr/pppp1pp1/4p2p/8/2B5/4P3/PPPP1PPP/RNBQK1NR w KQkq - 0 3");
-        ArrayList<Position> sampleMoves3 = new ArrayList<>();
+        ArrayList<Move> sampleMoves3 = new ArrayList<>();
         String[] strings3 = {"b3", "d3", "e2", "f1", "b5", "d5", "a6", "e6"};
         for (String str : strings3) {
-            sampleMoves3.add(new Position(str));
+            sampleMoves3.add(new Move(new Position("c4"), new Position(str)));
         }
         assertTrue(equalsIgnoringOrder(sampleMoves3, board.findMoves("c4")));
 
         // Test Rooks
         board = new Board("rnbqkbnr/pppp4/4pppp/8/2R4P/8/PPPPPPP1/RNBQKBN1 w Qkq - 0 5");
-        ArrayList<Position> sampleMoves4 = new ArrayList<>();
+        ArrayList<Move> sampleMoves4 = new ArrayList<>();
         String[] strings4 = {"c3", "a4", "b4", "d4", "e4", "f4", "g4", "c5", "c6", "c7"};
         for (String str : strings4) {
-            sampleMoves4.add(new Position(str));
+            sampleMoves4.add(new Move(new Position("c4"), new Position(str)));
         }
         assertTrue(equalsIgnoringOrder(sampleMoves4, board.findMoves("c4")));
 
         // Test Queens
 
         board = new Board("rnbqkbnr/pppppp2/6pp/8/6Q1/4P3/PPPP1PPP/RNB1KBNR w KQkq - 0 3");
-        ArrayList<Position> sampleMoves5 = new ArrayList<>();
+        ArrayList<Move> sampleMoves5 = new ArrayList<>();
         String[] strings5 = {"d1", "e2", "f3", "g3", "h3", "a4", "b4", "c4", "d4", "e4", "f4", "h4", "f5", "g5", "h5", "e6", "g6", "d7"};
         for (String str : strings5) {
-            sampleMoves5.add(new Position(str));
+            sampleMoves5.add(new Move(new Position("g4"), new Position(str)));
         }
         assertTrue(equalsIgnoringOrder(sampleMoves5, board.findMoves("g4")));
 
         //Test Kings
 
         board = new Board("rnbqk1nr/ppppp1b1/5ppp/8/2K5/4P3/PPPP1PPP/RNBQ1BNR w kq - 2 7");
-        ArrayList<Position> sampleMoves6 = new ArrayList<>();
+        ArrayList<Move> sampleMoves6 = new ArrayList<>();
         String[] strings6 = {"b3", "c3", "d3", "b4", "d4", "b5", "c5", "d5"};
         for (String str : strings6) {
-            sampleMoves6.add(new Position(str));
+            sampleMoves6.add(new Move(new Position("c4"), new Position(str)));
         }
         assertTrue(equalsIgnoringOrder(sampleMoves6, board.findMoves("c4")));
     }
@@ -171,7 +171,7 @@ public class BoardTest {
         assertTrue(board.resultsInCheck("f2", "f4", PieceColor.White));
         assertFalse(board.resultsInCheck("c2", "c3", PieceColor.White));
     }
-    public static boolean equalsIgnoringOrder(ArrayList<Position> list0, ArrayList<Position> list1) {
+    public static boolean equalsIgnoringOrder(ArrayList<Move> list0, ArrayList<Move> list1) {
         return list0.containsAll(list1) && list0.size() == list1.size();
     }
 
