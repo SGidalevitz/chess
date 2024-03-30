@@ -262,6 +262,9 @@ public class Board {
     public Square getSquareAtPosition(Position pos) {
         return this.board[pos.row][pos.col];
     }
+    public Square getSquareAtPosition(String pos) {
+        return getSquareAtPosition(Position.chessPositionToPosition(pos));
+    }
     public PieceColor getToMove() {
         return this.toMove;
     }
