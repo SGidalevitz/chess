@@ -265,7 +265,7 @@ public class Board {
         return this.board;
     }
 
-    public PieceColor getPieceColorFromChar(char c) {
+    public static PieceColor getPieceColorFromChar(char c) {
         return switch (c) {
             case 'K', 'Q', 'R', 'B', 'N', 'P' -> PieceColor.White;
             case 'k', 'q', 'r', 'b', 'n', 'p' -> PieceColor.Black;
@@ -273,7 +273,7 @@ public class Board {
         };
     }
 
-    public PieceType getPieceTypeFromChar(char c) {
+    public static PieceType getPieceTypeFromChar(char c) {
         return switch (c) {
             case 'K', 'k' -> PieceType.King;
             case 'Q', 'q' -> PieceType.Queen;
@@ -284,7 +284,7 @@ public class Board {
             default -> throw new IllegalArgumentException("Method getPieceTypeFromChar expects a proper chess character, but is given " + c + ".");
         };
     }
-    public char getCharFromPiece(PieceType pieceType, PieceColor pieceColor) {
+    public static char getCharFromPiece(PieceType pieceType, PieceColor pieceColor) {
         return switch (pieceType) {
             case King -> switch (pieceColor) {
                 case White -> 'K';
@@ -313,7 +313,7 @@ public class Board {
             case Empty -> throw new IllegalStateException("Empty piece got through handling in loop in getFEN().");
         };
     }
-    public String pieceTypeToString(PieceType pieceType) {
+    public static String pieceTypeToString(PieceType pieceType) {
         return switch (pieceType) {
             case King -> "King";
             case Queen -> "Queen";
