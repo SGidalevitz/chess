@@ -60,5 +60,12 @@ public class Square {
             };
         }
     }
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof Square other)) return false;
+        boolean optionalsAreSame = this.pieceColor.isEmpty() && other.pieceColor.isEmpty() || this.pieceColor.isPresent() && other.pieceColor.isPresent() && this.pieceColor.get() == other.pieceColor.get();
+        return this.position.equals(other.position) && this.pieceType == other.pieceType && optionalsAreSame;
+    }
 
 }
