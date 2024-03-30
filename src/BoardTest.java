@@ -229,6 +229,24 @@ public class BoardTest {
             sampleMoves6.add(new Move(new Position("c4"), new Position(str)));
         }
         assertTrue(equalsIgnoringOrder(sampleMoves6, board.findMoves("c4")));
+
+        // Test En Passant
+
+        board = new Board("rnbqkbnr/1pppp1pp/p7/5pP1/8/8/PPPPPP1P/RNBQKBNR w KQkq f6 0 3");
+        ArrayList<Move> sampleMoves7 = new ArrayList<>();
+        String[] strings7 = {"f6", "g6"};
+        for (String str : strings7) {
+            sampleMoves7.add(new Move(new Position("g5"), new Position(str)));
+        }
+        assertTrue(equalsIgnoringOrder(sampleMoves7, board.findMoves("g5")));
+
+        board = new Board("rnbqkbnr/p1pppppp/8/8/1pP4P/8/PP1PPPP1/RNBQKBNR b KQkq c3 0 3");
+        ArrayList<Move> sampleMoves8 = new ArrayList<>();
+        String[] strings8 = {"b3", "c3"};
+        for (String str : strings8) {
+            sampleMoves8.add(new Move(new Position("b4"), new Position(str)));
+        }
+        assertTrue(equalsIgnoringOrder(sampleMoves8, board.findMoves("b4")));
     }
 
     @Test
