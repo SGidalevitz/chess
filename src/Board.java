@@ -249,6 +249,9 @@ public class Board {
     public Square getSquareAtPosition(Position pos) {
         return this.board[pos.row][pos.col];
     }
+    public PieceColor getToMove() {
+        return this.toMove;
+    }
 
 
 
