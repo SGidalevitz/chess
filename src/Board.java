@@ -6,7 +6,7 @@ public class Board {
     public static final int BOARD_DIMENSION = 8;
     private Square[][] board;
     private PieceColor toMove; // 0 for white, 1 for black
-    private Optional<String> castlingRights;
+    public Optional<String> castlingRights;
     private Optional<Position> enPassantTargetSquare;
     private int halfMoveClock;
     private int fullMoveNumber;
@@ -458,6 +458,7 @@ public class Board {
         else {
             this.resetHalfMoveClock();
         }
+        updateCastlingRightsIfApplicable(originSquare);
         if (isDoublePawnMove) {
             if (originPosition.col != targetPosition.col) throw new IllegalStateException("Invalid move: Pawn move switches columns.");
             this.enPassantTargetSquare = Optional.of(new Position((originPosition.row + targetPosition.row) / 2, originPosition.col));
@@ -480,7 +481,49 @@ public class Board {
         }
     }
 
-    private static boolean isCapture(Square pieceSquare, Square targetSquare) {
+    // Note that this is before the board is updated, so the piece will still be in its origin
+    public void updateCastlingRightsIfApplicable(Square originSquare) {
+        Position originSquarePosition = originSquare.getPosition();
+        // If a king moves, then all castling rights are revoked.
+        if (originSquare.getPieceType() == PieceType.King) {
+            if (originSquare.getPieceColor().orElseThrow() == PieceColor.White) {
+                removeCastlingRights("KQ");
+            }
+            else {
+                removeCastlingRights("kq");
+            }
+        }
+        // If a rook moves, then the castling right for that respective side of castle is revoked.
+        else if (originSquare.getPieceType() == PieceType.Rook) {
+            if (originSquarePosition.equals(new Position("a1"))) {
+                removeCastlingRights("Q");
+            }
+            else if (originSquarePosition.equals(new Position("h1"))) {
+                removeCastlingRights("K");
+            }
+            else if (originSquarePosition.equals(new Position("a8"))) {
+                removeCastlingRights("q");
+            }
+            else if (originSquarePosition.equals(new Position("h8"))) {
+                removeCastlingRights("k");
+            }
+        }
+    }
+    public void removeCastlingRights(String toRemove) {
+        if (this.castlingRights.isEmpty()) return;
+        String castlingRights = this.castlingRights.get();
+        char[] toRemoveArray = toRemove.toCharArray();
+        StringBuilder newCastlingRights = new StringBuilder();
+        for (char c : castlingRights.toCharArray()) {
+            if (!contains(toRemoveArray, c)) {
+                newCastlingRights.append(c);
+            }
+        }
+        String newCastlingRightsString = newCastlingRights.toString();
+        this.castlingRights = (!newCastlingRightsString.isEmpty()) ? Optional.of(newCastlingRightsString) : Optional.empty();
+    }
+
+    public static boolean isCapture(Square pieceSquare, Square targetSquare) {
         Optional<PieceColor> pieceColor = pieceSquare.getPieceColor();
         if (pieceColor.isEmpty()) throw new IllegalStateException("Piece given to makeMove method has no color.");
         Optional<PieceColor> targetColor = targetSquare.getPieceColor();
@@ -656,6 +699,12 @@ public class Board {
             if (pos.equals(value)) {
                 return true;
             }
+        }
+        return false;
+    }
+    public static boolean contains(char[] arr, char value) {
+        for (char c : arr) {
+            if (c == value) return true;
         }
         return false;
     }
