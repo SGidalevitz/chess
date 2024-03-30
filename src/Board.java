@@ -434,13 +434,13 @@ public class Board {
         return resultsInCheck(Position.chessPositionToPosition(piecePosition), Position.chessPositionToPosition(targetPosition), sideColor);
     }
     public void makeMove(Move move) {
-        Position piecePosition = move.origin;
+        Position originPosition = move.origin;
         Position targetPosition = move.target;
-        Square pieceSquare = this.getSquareAtPosition(piecePosition);
+        Square originSquare = this.getSquareAtPosition(originPosition);
         Square targetSquare = this.getSquareAtPosition(targetPosition);
-        boolean isCapture = isCapture(pieceSquare, targetSquare);
-        boolean isPawnMove = pieceSquare.pieceType == PieceType.Pawn;
-        boolean isDoublePawnMove = isPawnMove && Math.abs(piecePosition.row - targetPosition.row) == 2;
+        boolean isCapture = isCapture(originSquare, targetSquare);
+        boolean isPawnMove = originSquare.pieceType == PieceType.Pawn;
+        boolean isDoublePawnMove = isPawnMove && Math.abs(originPosition.row - targetPosition.row) == 2;
         if (!(isCapture || isPawnMove)) {
             this.incrementHalfMoveClock();
         }
@@ -448,17 +448,17 @@ public class Board {
             this.resetHalfMoveClock();
         }
         if (isDoublePawnMove) {
-            if (piecePosition.col != targetPosition.col) throw new IllegalStateException("Invalid move: Pawn move switches columns.");
-            this.enPassantTargetSquare = Optional.of(new Position((piecePosition.row + targetPosition.row) / 2, piecePosition.col));
+            if (originPosition.col != targetPosition.col) throw new IllegalStateException("Invalid move: Pawn move switches columns.");
+            this.enPassantTargetSquare = Optional.of(new Position((originPosition.row + targetPosition.row) / 2, originPosition.col));
         }
         boolean isEnPassant = enPassantTargetSquare.isPresent() && targetPosition.equals(enPassantTargetSquare.get());
-        this.getSquareAtPosition(targetPosition).pieceType = this.getSquareAtPosition(piecePosition).pieceType;
-        this.getSquareAtPosition(targetPosition).pieceColor = this.getSquareAtPosition(piecePosition).pieceColor;
-        this.getSquareAtPosition(piecePosition).pieceType = PieceType.Empty;
-        this.getSquareAtPosition(piecePosition).pieceColor = Optional.empty();
+        this.getSquareAtPosition(targetPosition).pieceType = this.getSquareAtPosition(originPosition).pieceType;
+        this.getSquareAtPosition(targetPosition).pieceColor = this.getSquareAtPosition(originPosition).pieceColor;
+        this.getSquareAtPosition(originPosition).pieceType = PieceType.Empty;
+        this.getSquareAtPosition(originPosition).pieceColor = Optional.empty();
         if (isEnPassant) {
-            this.getSquareAtPosition(new Position(piecePosition.row, targetPosition.col)).pieceType = PieceType.Empty;
-            this.getSquareAtPosition(new Position(piecePosition.row, targetPosition.col)).pieceColor = Optional.empty();
+            this.getSquareAtPosition(new Position(originPosition.row, targetPosition.col)).pieceType = PieceType.Empty;
+            this.getSquareAtPosition(new Position(originPosition.row, targetPosition.col)).pieceColor = Optional.empty();
         }
         if (enPassantTargetSquare.isPresent() && !isDoublePawnMove) {
             enPassantTargetSquare = Optional.empty();
