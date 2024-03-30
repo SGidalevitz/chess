@@ -9,7 +9,7 @@ public class BoardTest {
 
     @Test
     public void testSquareInitialization() {
-        Board board = Board.STARTING_BOARD;
+        Board board = new Board();
         // Test that the board reads the FEN correctly by checking the piece types of certain squares on the starting board.
         assertEquals(PieceType.Pawn, board.getBoard()[1][0].getPieceType());
         assertEquals(PieceType.Rook, board.getBoard()[7][0].getPieceType());
@@ -23,7 +23,7 @@ public class BoardTest {
     }
     @Test
     public void testSwitchToMove() {
-        Board board = Board.STARTING_BOARD;
+        Board board = new Board();
         assertEquals(board.getToMove(), PieceColor.White);
         board.switchToMove();
         assertEquals(board.getToMove(), PieceColor.Black);
@@ -32,7 +32,7 @@ public class BoardTest {
     }
     @Test
     public void testIncrements() {
-        Board board = Board.STARTING_BOARD;
+        Board board = new Board();
         assertEquals(0, board.halfMoveClock);
         assertEquals(1, board.fullMoveNumber);
         board.incrementHalfMoveClock();
@@ -101,7 +101,7 @@ public class BoardTest {
     }
     @Test
     public void testGetSquareAtPosition() {
-        Board board = Board.STARTING_BOARD;
+        Board board = new Board();
         Position at = new Position("e1");
         assertEquals(new Square(at, PieceType.King, PieceColor.White), board.getSquareAtPosition(at));
         at = new Position("f7");
@@ -157,7 +157,7 @@ public class BoardTest {
     }
     @Test
     public void testLocateKing() {
-        Board board = Board.STARTING_BOARD;
+        Board board = new Board();
         assertEquals(new Position("e1"), board.locateKing(PieceColor.White));
         assertEquals(new Position("e8"), board.locateKing(PieceColor.Black));
         // Board with same layout as starting position, except white king is replaced with a pawn
@@ -177,7 +177,7 @@ public class BoardTest {
     @Test
     public void testFindMoves() {
 
-        Board board = Board.STARTING_BOARD;
+        Board board = new Board();
         // Test Pawns
         ArrayList<Move> sampleMoves0 = new ArrayList<>();
         String[] strings0 = {"e3", "e4"};

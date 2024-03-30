@@ -2,7 +2,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class Board {
-    public static final Board STARTING_BOARD = new Board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    public static final String STARTING_BOARD_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     public static final int BOARD_DIMENSION = 8;
     private Square[][] board;
     private PieceColor toMove; // 0 for white, 1 for black
@@ -41,7 +41,9 @@ public class Board {
         }
         this.halfMoveClock = Integer.parseInt(partsOfFEN[4]);
         this.fullMoveNumber = Integer.parseInt(partsOfFEN[5]);
-
+    }
+    public Board() {
+        this(STARTING_BOARD_FEN);
     }
     public Square[][] readFEN(String boardAsFENNotation) {
         String[] ranks = boardAsFENNotation.split("/");
