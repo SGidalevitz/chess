@@ -1,4 +1,5 @@
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Board {
     public static final Board STARTING_BOARD = new Board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
@@ -40,6 +41,7 @@ public class Board {
         }
         this.halfMoveClock = Integer.parseInt(partsOfFEN[4]);
         this.fullMoveNumber = Integer.parseInt(partsOfFEN[5]);
+
     }
     public Square[][] readFEN(String boardAsFENNotation) {
         String[] ranks = boardAsFENNotation.split("/");
@@ -348,16 +350,39 @@ public class Board {
         }
         return builder.toString();
     }
-    public String boardWithPossibleMovesFor(Position pos) {
-        ArrayList<Position> possibleMoves = findMoves(pos);
+    public String boardWithPossibleMovesFor(Position initialPosition) {
+        ArrayList<Move> possibleMoves = findMoves(initialPosition);
         StringBuilder builder = new StringBuilder();
         for (int rank = BOARD_DIMENSION - 1; rank >= 0; rank--) {
             for (int file = 0; file < BOARD_DIMENSION; file++) {
                 if (file == 0) {
                     builder.append(rank + 1).append(" - ");
                 }
-                Position current = new Position(rank, file);
+                Move current = new Move(initialPosition, new Position(rank, file));
                 if (possibleMoves.contains(current)) {
+                    builder.append("\u001B[31m").append(board[rank][file].toString()).append("\u001B[0m ");
+                }
+                else {
+                    builder.append(board[rank][file].toString()).append(" ");
+                }
+
+            }
+            builder.append("\n");
+        }
+        return getLastPartOfToString(builder);
+    }
+    public String boardWithLatestMove(Move move) {
+        Position initialPosition = move.origin;
+        Position targetPosition = move.target;
+        StringBuilder builder = new StringBuilder();
+        for (int rank = BOARD_DIMENSION - 1; rank >= 0; rank--) {
+            for (int file = 0; file < BOARD_DIMENSION; file++) {
+                if (file == 0) {
+                    builder.append(rank + 1).append(" - ");
+                }
+                //Move current = new Move(initialPosition, new Position(rank, file));
+                Position positionOn = new Position(rank, file);
+                if (initialPosition.equals(positionOn) || targetPosition.equals(positionOn)) {
                     builder.append("\u001B[31m").append(board[rank][file].toString()).append("\u001B[0m ");
                 }
                 else {
@@ -390,26 +415,30 @@ public class Board {
         }
         throw new IllegalStateException("No king found on board.");
     }
-    public boolean resultsInCheck(Position piecePosition, Position targetPosition, PieceColor sideColor) {
+    public boolean resultsInCheck(Move move, PieceColor sideColor) {
         Board testBoard = new Board(this);
-        testBoard.makeMove(piecePosition, targetPosition);
+        Position originPosition = move.origin;
+        Position targetPosition = move.target;
+        testBoard.makeMove(originPosition, targetPosition);
         Position kingLocation = testBoard.locateKing(sideColor);
-        HashSet<Position> a = testBoard.getMovesOfAllPieces(PieceColor.getOpposite(sideColor));
-        HashSet<Position> movesOfAllPieces = testBoard.getMovesOfAllPieces(PieceColor.getOpposite(sideColor));
-        //if (!movesOfAllPieces.equals(a)) System.out.println("other moves: " + movesOfAllPieces);
-        return contains(movesOfAllPieces,kingLocation);
+        HashSet<Move> movesOfAllPieces = testBoard.getMovesOfAllPieces(PieceColor.getOpposite(sideColor));
+        HashSet<Position> finalPositionsOfAllMoves = movesOfAllPieces.stream()
+                .map(o -> o.target)
+                .collect(Collectors.toCollection(HashSet::new));
+        return contains(finalPositionsOfAllMoves,kingLocation);
+    }
+    public boolean resultsInCheck(Position piecePosition, Position targetPosition, PieceColor sideColor) {
+        return resultsInCheck(new Move(piecePosition, targetPosition), sideColor);
     }
     public boolean resultsInCheck(String piecePosition, String targetPosition, PieceColor sideColor) {
         return resultsInCheck(Position.chessPositionToPosition(piecePosition), Position.chessPositionToPosition(targetPosition), sideColor);
     }
-    public void makeMove(Position piecePosition, Position targetPosition) {
+    public void makeMove(Move move) {
+        Position piecePosition = move.origin;
+        Position targetPosition = move.target;
         Square pieceSquare = this.getSquareAtPosition(piecePosition);
         Square targetSquare = this.getSquareAtPosition(targetPosition);
-        Optional<PieceColor> pieceColor = pieceSquare.getPieceColor();
-        if (pieceColor.isEmpty()) throw new IllegalStateException("Piece given to makeMove method has no color.");
-        Optional<PieceColor> targetColor = targetSquare.getPieceColor();
-        if (targetColor.isPresent() && targetColor.get() == pieceColor.get()) throw new IllegalStateException("Move given to makeMove method is invalid, as it involves a side capturing its own piece.");
-        boolean isCapture = targetColor.isPresent() && targetColor.get() == PieceColor.getOpposite(pieceColor.get());
+        boolean isCapture = isCapture(pieceSquare, targetSquare);
         boolean isPawnMove = pieceSquare.pieceType == PieceType.Pawn;
         boolean isDoublePawnMove = isPawnMove && Math.abs(piecePosition.row - targetPosition.row) == 2;
         if (!(isCapture || isPawnMove)) {
@@ -423,20 +452,13 @@ public class Board {
             this.enPassantTargetSquare = Optional.of(new Position((piecePosition.row + targetPosition.row) / 2, piecePosition.col));
         }
         boolean isEnPassant = enPassantTargetSquare.isPresent() && targetPosition.equals(enPassantTargetSquare.get());
-
+        this.getSquareAtPosition(targetPosition).pieceType = this.getSquareAtPosition(piecePosition).pieceType;
+        this.getSquareAtPosition(targetPosition).pieceColor = this.getSquareAtPosition(piecePosition).pieceColor;
+        this.getSquareAtPosition(piecePosition).pieceType = PieceType.Empty;
+        this.getSquareAtPosition(piecePosition).pieceColor = Optional.empty();
         if (isEnPassant) {
-            this.getSquareAtPosition(targetPosition).pieceType = this.getSquareAtPosition(piecePosition).pieceType;
-            this.getSquareAtPosition(targetPosition).pieceColor = this.getSquareAtPosition(piecePosition).pieceColor;
-            this.getSquareAtPosition(piecePosition).pieceType = PieceType.Empty;
-            this.getSquareAtPosition(piecePosition).pieceColor = Optional.empty();
             this.getSquareAtPosition(new Position(piecePosition.row, targetPosition.col)).pieceType = PieceType.Empty;
             this.getSquareAtPosition(new Position(piecePosition.row, targetPosition.col)).pieceColor = Optional.empty();
-        }
-        else {
-            this.getSquareAtPosition(targetPosition).pieceType = this.getSquareAtPosition(piecePosition).pieceType;
-            this.getSquareAtPosition(targetPosition).pieceColor = this.getSquareAtPosition(piecePosition).pieceColor;
-            this.getSquareAtPosition(piecePosition).pieceType = PieceType.Empty;
-            this.getSquareAtPosition(piecePosition).pieceColor = Optional.empty();
         }
         if (enPassantTargetSquare.isPresent() && !isDoublePawnMove) {
             enPassantTargetSquare = Optional.empty();
@@ -445,7 +467,18 @@ public class Board {
         if (toMove == PieceColor.White) {
             this.incrementFullMoveNumber();
         }
+    }
 
+    private static boolean isCapture(Square pieceSquare, Square targetSquare) {
+        Optional<PieceColor> pieceColor = pieceSquare.getPieceColor();
+        if (pieceColor.isEmpty()) throw new IllegalStateException("Piece given to makeMove method has no color.");
+        Optional<PieceColor> targetColor = targetSquare.getPieceColor();
+        if (targetColor.isPresent() && targetColor.get() == pieceColor.get()) throw new IllegalStateException("Move given to makeMove method is invalid, as it involves a side capturing its own piece.");
+        return targetColor.isPresent() && targetColor.get() == PieceColor.getOpposite(pieceColor.get());
+    }
+
+    public void makeMove(Position piecePosition, Position targetPosition) {
+        makeMove(new Move(piecePosition, targetPosition));
     }
     public void makeMove(String piecePosition, String targetPosition) {
         makeMove(Position.chessPositionToPosition(piecePosition), Position.chessPositionToPosition(targetPosition));
@@ -462,31 +495,31 @@ public class Board {
         }
         return positionsOfAllPieces;
     }
-    public HashSet<Position> getMovesOfAllPieces(PieceColor sideColor) {
-        HashSet<Position> allPossibleMoves = new HashSet<>();
+    public HashSet<Move> getMovesOfAllPieces(PieceColor sideColor) {
+        HashSet<Move> allPossibleMoves = new HashSet<>();
         for (Position position : getPositionsOfAllPieces(sideColor)) {
             allPossibleMoves.addAll(findMoves(position));
         }
         return allPossibleMoves;
     }
-    private ArrayList<Position> getMovesForKingKnightAndPawn(Position pos) {
+    private ArrayList<Move> getMovesForKingKnightAndPawn(Position pos) {
         Square initialPos = this.board[pos.row][pos.col];
         PieceType pieceType = initialPos.getPieceType();
         int[][] vectors = getPieceVectors(pieceType, pos);
         PieceColor thisPieceColor = initialPos.getPieceColor().orElseThrow();
         PieceColor oppositePieceColor = (thisPieceColor == PieceColor.White) ? PieceColor.Black : PieceColor.White;
-        ArrayList<Position> possibleMoves = new ArrayList<>();
+        ArrayList<Move> possibleMoves = new ArrayList<>();
         for (int[] vec : vectors) {
             try {
-                possibleMoves.add(new Position(pos.row + vec[0], pos.col + vec[1]));
+                possibleMoves.add(new Move(pos, new Position(pos.row + vec[0], pos.col + vec[1])));
             }
             catch (IllegalArgumentException ignored) { }
         }
         for (int i = possibleMoves.size() - 1; i >= 0; i--) {
-            Position move = possibleMoves.get(i);
-            Square targetSquare = board[move.row][move.col];
+            Move move = possibleMoves.get(i);
+            Square targetSquare = board[move.target.row][move.target.col];
             // Removes the move if it is either: out of bounds, or if the target square is occupied by a piece of its own kind.
-            if (!Position.isInBounds(move) || (targetSquare.getPieceColor().orElse(oppositePieceColor) == thisPieceColor)) {
+            if (!Position.isInBounds(move.target) || (targetSquare.getPieceColor().orElse(oppositePieceColor) == thisPieceColor)) {
                 possibleMoves.remove(i);
             }
         }
@@ -494,14 +527,14 @@ public class Board {
     }
 
 
-    private ArrayList<Position> getMovesForQueenRookAndBishop(Position pos) {
-        ArrayList<Position> possibleMoves = new ArrayList<>();
-        Square initialPos = this.board[pos.row][pos.col];
-        PieceType pieceType = initialPos.getPieceType();
-        int[][] vectors = getPieceVectors(pieceType, pos);
+    private ArrayList<Move> getMovesForQueenRookAndBishop(Position originPosition) {
+        ArrayList<Move> possibleMoves = new ArrayList<>();
+        Square originPositionSquare = this.board[originPosition.row][originPosition.col];
+        PieceType pieceType = originPositionSquare.getPieceType();
+        int[][] vectors = getPieceVectors(pieceType, originPosition);
         for (int[] vec : vectors) {
-            int row = pos.row;
-            int col = pos.col;
+            int row = originPosition.row;
+            int col = originPosition.col;
             boolean squareIsValid = true;
             while (squareIsValid) {
                 row += vec[0];
@@ -514,15 +547,15 @@ public class Board {
                     break;
                 }
                 Square targetSquare = board[row][col];
-                PieceColor thisPieceColor = initialPos.getPieceColor().orElseThrow();
+                PieceColor thisPieceColor = originPositionSquare.getPieceColor().orElseThrow();
                 PieceColor oppositePieceColor = (thisPieceColor == PieceColor.White) ? PieceColor.Black : PieceColor.White;
                 // If the target square is empty, it is a valid place to move
                 if (targetSquare.getPieceColor().isEmpty()) {
-                    possibleMoves.add(targetPosition);
+                    possibleMoves.add(new Move(originPosition, targetPosition));
                 }
                 // If the target square is the opposite side's piece, then it is valid but search needs to be stopped after it.
                 else if (targetSquare.getPieceColor().get() == oppositePieceColor) {
-                    possibleMoves.add(targetPosition);
+                    possibleMoves.add(new Move(originPosition, targetPosition));
                     squareIsValid = false;
                 }
                 // If the target square is the current side's piece, then it is invalid and search needs to be stopped.
@@ -533,14 +566,14 @@ public class Board {
         }
         return possibleMoves;
     }
-    public ArrayList<Position> findMoves(Position pos) {
+    public ArrayList<Move> findMoves(Position pos) {
         return switch (getSquareAtPosition(pos).getPieceType()) {
             case King, Knight, Pawn -> getMovesForKingKnightAndPawn(pos);
             case Queen, Rook, Bishop -> getMovesForQueenRookAndBishop(pos);
             case Empty -> throw new IllegalArgumentException("Empty position given to findMoves method, which requires an existent piece.");
         };
     }
-    public ArrayList<Position> findMoves(String chessPosition) {
+    public ArrayList<Move> findMoves(String chessPosition) {
         return findMoves(Position.chessPositionToPosition(chessPosition));
     }
 
