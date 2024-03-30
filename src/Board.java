@@ -19,6 +19,12 @@ public class Board {
     Examples: refer to test method.
      */
     public Board(String FEN) {
+        setValues(FEN);
+    }
+    public Board() {
+        this(STARTING_BOARD_FEN);
+    }
+    public void setValues(String FEN) {
         String[] partsOfFEN = FEN.split(" ");
         String exceptionMsg = getExceptionMessageForFENValidityIfExists(FEN);
         if (exceptionMsg != null) throw new IllegalArgumentException(exceptionMsg);
@@ -41,9 +47,6 @@ public class Board {
         }
         this.halfMoveClock = Integer.parseInt(partsOfFEN[4]);
         this.fullMoveNumber = Integer.parseInt(partsOfFEN[5]);
-    }
-    public Board() {
-        this(STARTING_BOARD_FEN);
     }
     public Square[][] readFEN(String boardAsFENNotation) {
         String[] ranks = boardAsFENNotation.split("/");
@@ -243,6 +246,9 @@ public class Board {
             case Black -> PieceColor.White;
             case White -> PieceColor.Black;
         };
+    }
+    public void reset() {
+        setValues(STARTING_BOARD_FEN);
     }
     public void incrementFullMoveNumber() {
         fullMoveNumber++;
