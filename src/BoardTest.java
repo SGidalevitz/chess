@@ -6,19 +6,6 @@ import java.util.ArrayList;
 import static org.junit.Assert.*;
 
 public class BoardTest {
-    @Test
-    public void testGetPieceAttributesFromChar() {
-        Board board = Board.STARTING_BOARD;
-        // Test the getPieceTypeFromChar() method.
-        assertEquals(PieceType.Rook, board.getPieceTypeFromChar('r'));
-        assertEquals(PieceType.Queen, board.getPieceTypeFromChar('Q'));
-        assertEquals(PieceType.Bishop, board.getPieceTypeFromChar('b'));
-        // Test the getPieceColorFromChar() method.
-        assertEquals(PieceColor.Black, board.getPieceColorFromChar('r'));
-        assertEquals(PieceColor.White, board.getPieceColorFromChar('Q'));
-        assertEquals(PieceColor.Black, board.getPieceColorFromChar('b'));
-
-    }
 
     @Test
     public void testSquareInitialization() {
@@ -33,6 +20,29 @@ public class BoardTest {
         assertTrue(board.getBoard()[6][7].getPieceColor().isPresent());
         assertEquals(PieceColor.Black, board.getBoard()[6][7].getPieceColor().get());
         assertTrue(board.getBoard()[3][4].getPieceColor().isEmpty());
+    }
+    @Test
+    public void testSwitchToMove() {
+        Board board = Board.STARTING_BOARD;
+        assertEquals(board.getToMove(), PieceColor.White);
+        board.switchToMove();
+        assertEquals(board.getToMove(), PieceColor.Black);
+        board.switchToMove();
+        assertEquals(board.getToMove(), PieceColor.White);
+    }
+    @Test
+    public void testIncrements() {
+        Board board = Board.STARTING_BOARD;
+        assertEquals(0, board.halfMoveClock);
+        assertEquals(1, board.fullMoveNumber);
+        board.incrementHalfMoveClock();
+        assertEquals(1, board.halfMoveClock);
+        board.incrementFullMoveNumber();
+        assertEquals(2, board.fullMoveNumber);
+        board.resetHalfMoveClock();
+        assertEquals(0, board.halfMoveClock);
+        board.incrementFullMoveNumber();
+        assertEquals(3, board.fullMoveNumber);
     }
     @Test
     public void testInvalidFENs() {
@@ -88,6 +98,71 @@ public class BoardTest {
         board.makeMove("f6", "e5");
         assertEquals("3N1R2/P7/8/4kbp1/r7/r4BK1/6P1/8 w - - 11 54", board.getFEN());
 
+    }
+    @Test
+    public void testGetSquareAtPosition() {
+        Board board = Board.STARTING_BOARD;
+        Position at = new Position("e1");
+        assertEquals(new Square(at, PieceType.King, PieceColor.White), board.getSquareAtPosition(at));
+        at = new Position("f7");
+        assertEquals(new Square(at, PieceType.Pawn, PieceColor.Black), board.getSquareAtPosition(at));
+        at = new Position("b1");
+        assertEquals(new Square(at, PieceType.Knight, PieceColor.White), board.getSquareAtPosition(at));
+    }
+    @Test
+    public void testGetPieceColorFromChar() {
+        assertEquals(PieceColor.Black, Board.getPieceColorFromChar('q'));
+        assertEquals(PieceColor.Black, Board.getPieceColorFromChar('p'));
+        assertEquals(PieceColor.White, Board.getPieceColorFromChar('R'));
+        assertEquals(PieceColor.White, Board.getPieceColorFromChar('B'));
+        assertThrows(IllegalArgumentException.class, () -> Board.getPieceColorFromChar('&'));
+        assertThrows(IllegalArgumentException.class, () -> Board.getPieceColorFromChar('a'));
+    }
+    @Test
+    public void testGetPieceTypeFromChar() {
+        assertEquals(PieceType.Bishop, Board.getPieceTypeFromChar('b'));
+        assertEquals(PieceType.Bishop, Board.getPieceTypeFromChar('B'));
+        assertEquals(PieceType.Queen, Board.getPieceTypeFromChar('q'));
+        assertEquals(PieceType.Queen, Board.getPieceTypeFromChar('Q'));
+        assertThrows(IllegalArgumentException.class, () -> Board.getPieceTypeFromChar('&'));
+        assertThrows(IllegalArgumentException.class, () -> Board.getPieceTypeFromChar('a'));
+    }
+    @Test
+    public void testGetCharFromPiece() {
+        assertEquals('n', Board.getCharFromPiece(PieceType.Knight, PieceColor.Black));
+        assertEquals('k', Board.getCharFromPiece(PieceType.King, PieceColor.Black));
+        assertEquals('P', Board.getCharFromPiece(PieceType.Pawn, PieceColor.White));
+        assertEquals('B', Board.getCharFromPiece(PieceType.Bishop, PieceColor.White));
+        assertThrows(IllegalStateException.class, () -> Board.getCharFromPiece(PieceType.Empty, PieceColor.White));
+    }
+    @Test
+    public void testPieceTypeToString() {
+        assertEquals("King", Board.pieceTypeToString(PieceType.King));
+        assertEquals("Queen", Board.pieceTypeToString(PieceType.Queen));
+        assertEquals("Rook", Board.pieceTypeToString(PieceType.Rook));
+        assertEquals("Bishop", Board.pieceTypeToString(PieceType.Bishop));
+        assertEquals("Knight", Board.pieceTypeToString(PieceType.Knight));
+        assertEquals("Pawn", Board.pieceTypeToString(PieceType.Pawn));
+        assertEquals("Empty", Board.pieceTypeToString(PieceType.Empty));
+    }
+    @Test
+    public void testCharIsInBetween() {
+        assertTrue(Board.charIsBetween('5', 3, 8));
+        assertTrue(Board.charIsBetween('7', 6, 7));
+        assertTrue(Board.charIsBetween('1', 0, 7));
+        assertTrue(Board.charIsBetween0And8('5'));
+        assertFalse(Board.charIsBetween('1', 4, 6));
+        assertFalse(Board.charIsBetween('9', 3, 4));
+        assertFalse(Board.charIsBetween0And8('9'));
+    }
+    @Test
+    public void testLocateKing() {
+        Board board = Board.STARTING_BOARD;
+        assertEquals(new Position("e1"), board.locateKing(PieceColor.White));
+        assertEquals(new Position("e8"), board.locateKing(PieceColor.Black));
+        // Board with same layout as starting position, except white king is replaced with a pawn
+        Board board1 = new Board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQPBNR w KQkq - 0 1");
+        assertThrows(IllegalStateException.class, () -> board1.locateKing(PieceColor.White));
     }
     @Test
     public void testFindMoves() {
@@ -173,6 +248,19 @@ public class BoardTest {
     }
     public static boolean equalsIgnoringOrder(ArrayList<Move> list0, ArrayList<Move> list1) {
         return list0.containsAll(list1) && list0.size() == list1.size();
+    }
+    @Test
+    public void testEqualsIgnoringOrder() {
+        Move move0 = new Move("e2", "e4");
+        Move move1 = new Move("e7", "e5");
+        ArrayList<Move> list0 = new ArrayList<>();
+        ArrayList<Move> list1 = new ArrayList<>();
+        list0.add(move0);
+        list0.add(move1);
+        list1.add(move1);
+        list1.add(move0);
+        assertTrue(equalsIgnoringOrder(list0, list1));
+
     }
 
 }
