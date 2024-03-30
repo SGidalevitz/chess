@@ -455,6 +455,8 @@ public class Board {
         boolean isCapture = isCapture(originSquare, targetSquare);
         boolean isPawnMove = originSquare.pieceType == PieceType.Pawn;
         boolean isDoublePawnMove = isPawnMove && Math.abs(originPosition.row - targetPosition.row) == 2;
+        PieceColor moveColor = originSquare.pieceColor.orElseThrow();
+        if (moveColor != toMove) throw new IllegalArgumentException("Move for " + moveColor + " given, but it is " + toMove + "'s turn.");
         if (!(isCapture || isPawnMove)) {
             this.incrementHalfMoveClock();
         }
