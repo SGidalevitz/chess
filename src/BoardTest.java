@@ -165,6 +165,16 @@ public class BoardTest {
         assertThrows(IllegalStateException.class, () -> board1.locateKing(PieceColor.White));
     }
     @Test
+    public void testIsCapture() {
+        Board board = new Board("rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 2");
+        assertTrue(Board.isCapture(board.getSquareAtPosition(new Position("e4")), board.getSquareAtPosition(new Position("d5"))));
+        assertFalse(Board.isCapture(board.getSquareAtPosition(new Position("e4")), board.getSquareAtPosition(new Position("e5"))));
+
+        board = new Board("rnbqkbnr/ppp1pppp/8/3p4/4P1Q1/8/PPPP1PPP/RNB1KBNR b KQkq - 1 2");
+        assertTrue(Board.isCapture(board.getSquareAtPosition(new Position("c8")), board.getSquareAtPosition(new Position("g4"))));
+        assertFalse(Board.isCapture(board.getSquareAtPosition(new Position("c8")), board.getSquareAtPosition(new Position("f5"))));
+    }
+    @Test
     public void testFindMoves() {
 
         Board board = Board.STARTING_BOARD;
