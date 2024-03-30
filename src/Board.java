@@ -402,6 +402,9 @@ public class Board {
         this.getSquareAtPosition(piecePosition).pieceType = PieceType.Empty;
         this.getSquareAtPosition(piecePosition).pieceColor = Optional.empty();
     }
+    public void makeMove(String piecePosition, String targetPosition) {
+        makeMove(Position.chessPositionToPosition(piecePosition), Position.chessPositionToPosition(targetPosition));
+    }
 
     public ArrayList<Position> getPositionsOfAllPieces(PieceColor sideColor) {
         ArrayList<Position> positionsOfAllPieces = new ArrayList<>();
