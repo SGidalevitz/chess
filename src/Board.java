@@ -507,7 +507,7 @@ public class Board {
         PieceType pieceType = initialPos.getPieceType();
         int[][] vectors = getPieceVectors(pieceType, pos);
         PieceColor thisPieceColor = initialPos.getPieceColor().orElseThrow();
-        PieceColor oppositePieceColor = (thisPieceColor == PieceColor.White) ? PieceColor.Black : PieceColor.White;
+        PieceColor oppositePieceColor = PieceColor.getOpposite(thisPieceColor);
         ArrayList<Move> possibleMoves = new ArrayList<>();
         for (int[] vec : vectors) {
             try {
@@ -530,8 +530,10 @@ public class Board {
     private ArrayList<Move> getMovesForQueenRookAndBishop(Position originPosition) {
         ArrayList<Move> possibleMoves = new ArrayList<>();
         Square originPositionSquare = this.board[originPosition.row][originPosition.col];
-        PieceType pieceType = originPositionSquare.getPieceType();
-        int[][] vectors = getPieceVectors(pieceType, originPosition);
+        PieceType originType = originPositionSquare.getPieceType();
+        PieceColor thisPieceColor = originPositionSquare.getPieceColor().orElseThrow();
+        PieceColor oppositePieceColor = PieceColor.getOpposite(thisPieceColor);
+        int[][] vectors = getPieceVectors(originType, originPosition);
         for (int[] vec : vectors) {
             int row = originPosition.row;
             int col = originPosition.col;
@@ -547,8 +549,6 @@ public class Board {
                     break;
                 }
                 Square targetSquare = board[row][col];
-                PieceColor thisPieceColor = originPositionSquare.getPieceColor().orElseThrow();
-                PieceColor oppositePieceColor = (thisPieceColor == PieceColor.White) ? PieceColor.Black : PieceColor.White;
                 // If the target square is empty, it is a valid place to move
                 if (targetSquare.getPieceColor().isEmpty()) {
                     possibleMoves.add(new Move(originPosition, targetPosition));
