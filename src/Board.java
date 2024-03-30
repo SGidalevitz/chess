@@ -247,8 +247,11 @@ public class Board {
             case White -> PieceColor.Black;
         };
     }
+    public void reset(String FEN) {
+        setValues(FEN);
+    }
     public void reset() {
-        setValues(STARTING_BOARD_FEN);
+        reset(STARTING_BOARD_FEN);
     }
     public void incrementFullMoveNumber() {
         fullMoveNumber++;
