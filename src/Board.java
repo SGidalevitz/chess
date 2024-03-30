@@ -246,6 +246,9 @@ public class Board {
     public void incrementHalfMoveClock() {
         halfMoveClock++;
     }
+    public void resetHalfMoveClock() {
+        halfMoveClock = 0;
+    }
     public Square getSquareAtPosition(Position pos) {
         return this.board[pos.row][pos.col];
     }
@@ -411,6 +414,9 @@ public class Board {
         boolean isDoublePawnMove = isPawnMove && Math.abs(piecePosition.row - targetPosition.row) == 2;
         if (!(isCapture || isPawnMove)) {
             this.incrementHalfMoveClock();
+        }
+        else {
+            this.resetHalfMoveClock();
         }
         if (isDoublePawnMove) {
             if (piecePosition.col != targetPosition.col) throw new IllegalStateException("Invalid move: Pawn move switches columns.");
