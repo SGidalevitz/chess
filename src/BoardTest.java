@@ -258,6 +258,34 @@ public class BoardTest {
         }
         assertTrue(equalsIgnoringOrder(sampleMoves8, board.findMoves("b4")));
     }
+    @Test
+    public void testMakeMove() {
+        Board board = new Board();
+        board.makeMove("e2", "e4");
+        // Make sure original position of piece is empty
+        assertEquals(new Square("e2"), board.getSquareAtPosition("e2"));
+        assertEquals(new Square("e4", PieceType.Pawn, PieceColor.White), board.getSquareAtPosition("e4"));
+
+        board = new Board("rnbqkb1r/pppppppp/7n/5N2/8/8/PPPPPPPP/RNBQKB1R w KQkq - 6 4");
+        board.makeMove("f5", "h6");
+        // Make sure original position of piece is empty
+        assertEquals(new Square("f5"), board.getSquareAtPosition("f5"));
+        assertEquals(new Square("h6", PieceType.Knight, PieceColor.White), board.getSquareAtPosition("h6"));
+    }
+    @Test
+    public void testRemoveCastlingRights() {
+        Board board = new Board();
+        assertEquals("KQkq", board.castlingRights.orElseThrow());
+        board.removeCastlingRights("KQ");
+        assertEquals("kq", board.castlingRights.orElseThrow());
+        board = new Board();
+        board.removeCastlingRights("k");
+        board.removeCastlingRights("Q");
+        assertEquals("Kq", board.castlingRights.orElseThrow());
+        board.reset();
+        board.removeCastlingRights("kq");
+        assertEquals("KQ", board.castlingRights.orElseThrow());
+    }
 
     @Test
     public void testResultsInCheck() {
