@@ -397,10 +397,46 @@ public class Board {
         return resultsInCheck(Position.chessPositionToPosition(piecePosition), Position.chessPositionToPosition(targetPosition), sideColor);
     }
     public void makeMove(Position piecePosition, Position targetPosition) {
-        this.getSquareAtPosition(targetPosition).pieceType = this.getSquareAtPosition(piecePosition).pieceType;
-        this.getSquareAtPosition(targetPosition).pieceColor = this.getSquareAtPosition(piecePosition).pieceColor;
-        this.getSquareAtPosition(piecePosition).pieceType = PieceType.Empty;
-        this.getSquareAtPosition(piecePosition).pieceColor = Optional.empty();
+        Square pieceSquare = this.getSquareAtPosition(piecePosition);
+        Square targetSquare = this.getSquareAtPosition(targetPosition);
+        Optional<PieceColor> pieceColor = pieceSquare.getPieceColor();
+        if (pieceColor.isEmpty()) throw new IllegalStateException("Piece given to makeMove method has no color.");
+        Optional<PieceColor> targetColor = targetSquare.getPieceColor();
+        if (targetColor.isPresent() && targetColor.get() == pieceColor.get()) throw new IllegalStateException("Move given to makeMove method is invalid, as it involves a side capturing its own piece.");
+        boolean isCapture = targetColor.isPresent() && targetColor.get() == PieceColor.getOpposite(pieceColor.get());
+        boolean isPawnMove = pieceSquare.pieceType == PieceType.Pawn;
+        boolean isDoublePawnMove = isPawnMove && Math.abs(piecePosition.row - targetPosition.row) == 2;
+        if (!(isCapture || isPawnMove)) {
+            this.incrementHalfMoveClock();
+        }
+        if (isDoublePawnMove) {
+            if (piecePosition.col != targetPosition.col) throw new IllegalStateException("Invalid move: Pawn move switches columns.");
+            this.enPassantTargetSquare = Optional.of(new Position((piecePosition.row + targetPosition.row) / 2, piecePosition.col));
+        }
+        boolean isEnPassant = enPassantTargetSquare.isPresent() && targetPosition.equals(enPassantTargetSquare.get());
+
+        if (isEnPassant) {
+            this.getSquareAtPosition(targetPosition).pieceType = this.getSquareAtPosition(piecePosition).pieceType;
+            this.getSquareAtPosition(targetPosition).pieceColor = this.getSquareAtPosition(piecePosition).pieceColor;
+            this.getSquareAtPosition(piecePosition).pieceType = PieceType.Empty;
+            this.getSquareAtPosition(piecePosition).pieceColor = Optional.empty();
+            this.getSquareAtPosition(new Position(piecePosition.row, targetPosition.col)).pieceType = PieceType.Empty;
+            this.getSquareAtPosition(new Position(piecePosition.row, targetPosition.col)).pieceColor = Optional.empty();
+        }
+        else {
+            this.getSquareAtPosition(targetPosition).pieceType = this.getSquareAtPosition(piecePosition).pieceType;
+            this.getSquareAtPosition(targetPosition).pieceColor = this.getSquareAtPosition(piecePosition).pieceColor;
+            this.getSquareAtPosition(piecePosition).pieceType = PieceType.Empty;
+            this.getSquareAtPosition(piecePosition).pieceColor = Optional.empty();
+        }
+        if (enPassantTargetSquare.isPresent() && !isDoublePawnMove) {
+            enPassantTargetSquare = Optional.empty();
+        }
+        this.switchToMove();
+        if (toMove == PieceColor.White) {
+            this.incrementFullMoveNumber();
+        }
+
     }
     public void makeMove(String piecePosition, String targetPosition) {
         makeMove(Position.chessPositionToPosition(piecePosition), Position.chessPositionToPosition(targetPosition));
@@ -518,24 +554,49 @@ public class Board {
     public int[][] getPawnVectors(Position pos) {
         Square initialPos = this.board[pos.row][pos.col];
         PieceColor thisPieceColor = initialPos.getPieceColor().orElseThrow();
-        int[][] vectors;
-        int[][][] possibleCases =
+        ArrayList<Integer[]> vectors = new ArrayList<>();
+        if (enPassantTargetSquare.isPresent()) {
+            if (initialPos.getPieceColor().get() == PieceColor.White) {
+                if (pos.row == enPassantTargetSquare.get().row - 1 && pos.col == enPassantTargetSquare.get().col - 1) {
+                    vectors.add(new Integer[]{1, 1});
+                }
+                else if (pos.row == enPassantTargetSquare.get().row - 1 && pos.col == enPassantTargetSquare.get().col + 1) {
+                    vectors.add(new Integer[]{1, -1});
+                }
+            }
+            else {
+                if (pos.row == enPassantTargetSquare.get().row + 1 && pos.col == enPassantTargetSquare.get().col - 1) {
+                    vectors.add(new Integer[]{-1, 1});
+                }
+                else if (pos.row == enPassantTargetSquare.get().row + 1 && pos.col == enPassantTargetSquare.get().col + 1) {
+                    vectors.add(new Integer[]{-1, -1});
+                }
+            }
+        }
+        Integer[][][] possibleCases =
                { {{1, 0},  {2, 0}},
                 {{-1, 0}, {-2, 0}},
                 { {1, 0}},
-                {{-1, 0}}         };
+                {{-1, 0}},
+               };
         if (thisPieceColor == PieceColor.White && pos.row == 1) {
-            return possibleCases[0];
+            vectors.addAll(Arrays.asList(possibleCases[0]));
         }
         else if (thisPieceColor == PieceColor.Black && pos.row == 6) {
-            return possibleCases[1];
+            vectors.addAll(Arrays.asList(possibleCases[1]));
         }
         else if (thisPieceColor == PieceColor.White) {
-            return possibleCases[2];
+            vectors.addAll(Arrays.asList(possibleCases[2]));
         }
         else {
-            return possibleCases[3];
+            vectors.addAll(Arrays.asList(possibleCases[3]));
         }
+        int[][] returnVectors = new int[vectors.size()][2];
+        for (int i = 0; i < vectors.size(); i++) {
+            returnVectors[i][0] = vectors.get(i)[0];
+            returnVectors[i][1] = vectors.get(i)[1];
+        }
+        return returnVectors;
     }
     public static boolean contains(HashSet<Position> list, Position value) {
         for (Position pos : list) {
